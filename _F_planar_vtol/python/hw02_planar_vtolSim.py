@@ -30,7 +30,7 @@ while t < P.t_end:  # main simulation loop
     hdot0 = 0.0
     state = np.array([[z], [z_dot], [h0], [hdot0], [theta], [theta_dot]])  #state is made of theta, and theta_dot
     animation.update(state)
-    dataPlot.update(t, state, [[f],[f]])
+    dataPlot.update(t, state, [[f],[f]], 0, 0)
 
     # advance time by t_plot
     t += P.t_plot  
