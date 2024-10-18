@@ -13,7 +13,6 @@ class massDynamics:
         self.m = P.m * (1.+alpha*(2.*np.random.rand()-1.))
         # Length of the arm, m
         self.k = P.k * (1.+alpha*(2.*np.random.rand()-1.))
-        self.ell = P.length * (1.+alpha*(2.*np.random.rand()-1.))
         # Damping coefficient, Ns
         self.b = P.b * (1.+alpha*(2.*np.random.rand()-1.))  
         # sample rate at which the dynamics are propagated
@@ -34,7 +33,7 @@ class massDynamics:
         # re-label states for readability
         z = state[0][0]
         zdot = state[1][0]
-        zddot = (force + self.b*zdot - self.k*z)/self.m
+        zddot = (force - self.b*zdot - self.k*z)/self.m
         xdot = np.array([[zdot], [zddot]])
         return xdot
 
