@@ -22,7 +22,7 @@ Author: Benjamin Arnesen
 Version: 1.0
 """
 
-from hummingbird_dynamics_solution import HummingbirdDynamics
+from hummingbirdDynamics import HummingbirdDynamics
 from typing import Type
 import numpy as np
 import pickle
@@ -38,6 +38,7 @@ print(pickle_file_path)
 # Unpickle the dictionary
 with open(pickle_file_path, 'rb') as file:
     tests_dict = pickle.load(file)
+    # print(tests_dict)
 
 
 # initial_state, input_force):
@@ -57,17 +58,24 @@ def test_matrices(hb_dynamics: Type[HummingbirdDynamics], test: str):
 
 def _test_M(hb: HummingbirdDynamics, single_test_dict: dict, key: str):
     M_correct = single_test_dict[key]
-    M_student = hb._M(hb.state)
+    M_student = hb._M(single_test_dict["Init State"])
+    print(M_correct)
+    print(M_student)
     compare_matrices(M_correct, M_student, key)
 
 
 def _test_C(hb: HummingbirdDynamics, single_test_dict: dict, key: str):
     C_correct = single_test_dict[key]
-    C_student = hb._C(hb.state)
+    print(single_test_dict["Init State"])
+    C_student = hb._C(single_test_dict["Init State"])
+    print(C_correct)
+    print(C_student)
     compare_matrices(C_correct, C_student, key)
 
 
 def _test_partialP(hb: HummingbirdDynamics, single_test_dict: dict, key: str):
+    hb = HummingbirdDynamics()
+    hb.state = single_test_dict["Init State"]
     partialP_correct = single_test_dict[key]
     partialP_student = hb._partialP(hb.state)
     compare_matrices(partialP_correct, partialP_student, key)
@@ -140,6 +148,10 @@ def matrix_shape_error(matrix_name: str):
     print(f"\nYour {matrix_name} is the wrong shape")
 
 
+
 # You can also run each test one at a time. Edit the line below. Specify the
     # function name, the test you are running, and the key
-# _test_M(HummingbirdDynamics, tests_dict["Test #1"], "M")
+# _test_C(HummingbirdDynamics(), tests_dict["Test #3"], "C")
+
+_test_M(HummingbirdDynamics(), tests_dict["Test #3"], "M")
+

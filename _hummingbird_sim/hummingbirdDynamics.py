@@ -1,19 +1,13 @@
 import numpy as np 
 import hummingbirdParam as P
+from numpy import sin, cos
 
 
 class HummingbirdDynamics:
-    def __init__(self, alpha=0.0):
-        # Initial state conditions
-        self.state = np.array([
-            [P.phi0],  # roll angle
-            [P.theta0],  # pitch angle
-            [P.psi0],  # yaw angle
-            [P.phidot0],  # roll rate
-            [P.thetadot0],  # pitch rate
-            [P.psidot0],  # yaw rate
-        ])
+    def __init__(self, initial_state=np.zeros((6,1)), alpha=0.0):
 
+        # Initial state conditions
+        self.state = initial_state
         # vary the actual physical parameters
         self.ell1 = P.ell1 * (1.+alpha*(2.*np.random.rand()-1.))
         self.ell2 = P.ell2 * (1.+alpha*(2.*np.random.rand()-1.))
@@ -81,9 +75,9 @@ class HummingbirdDynamics:
     def h(self):
         # FIXME Fill in this function
         # return y = h(x)
-        phi = 
-        theta = 
-        psi = 
+        phi = self.state[0][0]
+        theta = self.state[1][0]
+        psi = self.state[2][0]
         y = np.array([[phi], [theta], [psi]])
         return y
 
@@ -104,35 +98,89 @@ class HummingbirdDynamics:
         thetadot = state[4][0]
         psidot = state[5][0]
 
-        # Fill out M22, M23, and M33
-        M22 = 
-        M23 = 
-        M33 = 
+        J1x = self.J1x
+        J1y = self.J1y
+        J1z = self.J1z
 
+        J2x = self.J2x
+        J2y = self.J2y
+        J2z = self.J2z
+
+        J3z = self.J3z
+
+        m1 = self.m1
+        m2 = self.m2
+        m3 = self.m3
+        l1 = self.ell1
+        l2 = self.ell2
+        l3x = self.ell3x
+        l3y = self.ell3y
+
+        # Fill out M22, M23, and M33
+        M22 = m1*l1**2 + m2*l2**2 + J2y + J1y * cos(phi)**2 + J1z * sin(phi)**2
+        M23 = (J1y - J1z) * sin(phi) * cos(phi) * cos(theta)
+        M33 = (m1*l1**2 + m2*l2**2 + J2z + J1y * sin(phi)**2 + J1z * cos(phi)**2) * cos(theta)**2 + (J1x + J2x)*sin(theta)**2 + m3 * (l3x**2 + l3y**2) + J3z
+        M33 = (m1*l1**2 + m2*l2**2 + J2z + J1y * sin(phi)**2 + J1z * cos(phi)**2) * cos(theta)**2 + (J1x + J2x)*sin(theta)**2 + m3 * (l3x**2 + l3y**2) + J3z
+        corners = -J1x*sin(theta)
         # Return the M matrix
-        return np.array([[, , ],
-                      [, , ],
-                      [, , ]
+        return np.array([[J1x, 0, corners],
+                      [0, M22, M23],
+                      [corners, M23, M33]
                       ])
 
     def _C(self, state: np.ndarray):
         # FIXME Fill in this function
         #extact any necessary variables from the state
+        phi = state[0][0]
+        theta = state[1][0]
+        psi = state[2][0]
+        phidot = state[3][0]
+        thetadot = state[4][0]
+        psidot = state[5][0]
 
+        s_phi = sin(phi)
+        c_phi = cos(phi)
+        s_theta = sin(theta)
+        c_theta = cos(theta)
+
+        J1x = self.J1x
+        J1y = self.J1y
+        J1z = self.J1z
+
+        J2x = self.J2x
+        J2y = self.J2y
+        J2z = self.J2z
+
+        m1 = self.m1
+        m2 = self.m2
+        l1 = self.ell1
+        l2 = self.ell2
+        
+
+        N33 = 2*(J1x + J2x - m1*l1**2 - m2*l2**2 - J2z - J1y*s_phi**2 - J1z*c_phi**2)*s_theta*c_theta
+
+        c3_1 = thetadot**2 * (J1z-J1y) * s_phi*c_phi*s_theta
+        c3_2 = ((J1y-J1z)*(c_phi**2-s_phi**2) - J1x) * c_theta*phidot*thetadot
+        c3_3 = (J1z-J1y)*s_phi*c_phi*s_theta*thetadot**2 + 2*(J1y-J1z)*s_phi*c_phi*phidot*psidot
+        c3_4 = 2*(-m1*l1**2 - m2*l2**2 - J2z + J1x + J2x + J1y*s_phi**2 + J1z*s_phi**2) * s_theta*c_theta*thetadot*psidot
+
+        C11 = (J1y - J1z) * s_phi * c_phi * (thetadot**2 - c_theta**2 * psidot**2) + ((J1y - J1z) * (c_phi**2 - s_phi**2) - J1x) * (c_theta * thetadot * psidot)        
+        C12 = 2 * (J1z - J1y) * s_phi * c_phi * phidot * thetadot + ((J1y - J1z) * (c_phi**2 - s_phi**2) + self.J1x) * c_theta * phidot * psidot - 0.5 * N33 * psidot**2
+        C13 = c3_1 + c3_2 + c3_3 + c3_4
         # Return the C matrix
-        return np.array([[],
-                [],
-                [],
+        return np.array([[C11],
+                [C12],
+                [C13],
                 ])
         
     def _partialP(self, state: np.ndarray):
         # FIXME Fill in this function
         #extact any necessary variables from the state
-
+        theta = state[1][0]
         # Return the partialP array
-        return np.array([[],
-                        [],
-                        [],
+        return np.array([[0],
+                        [(self.m1 * self.ell1 + self.m2*self.ell2)*P.g*cos(theta)],
+                        [0],
                         ])
     
     def _tau(self, state: np.ndarray, force: float, torque: float):
@@ -153,18 +201,20 @@ class HummingbirdDynamics:
         """
         # FIXME Fill in this function
         #extract any necessary variables from the state
+        phi = state[0][0]
+        theta = state[1][0]
 
         # Return the tau matrix
-        return np.array([[],
-                        [],
-                        []])
+        return np.array([[torque],
+                        [self.ellT * force * cos(phi)],
+                        [self.ellT * force * cos(theta) * sin(phi) - torque * sin(theta)]])
     
     def _B(self):
         # FIXME Fill in this function
         # This needs no variables from the state
         
         # Return the B matrix
-        return B
+        return 0.001 * np.eye(3)
 
 
 def saturate(u: np.ndarray, limit: float):

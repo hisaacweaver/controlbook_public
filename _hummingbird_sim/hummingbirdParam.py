@@ -9,7 +9,7 @@ thetadot0 = 0.0         # pitch rate in rads/sec
 psidot0 = 0.0              # yaw rate in rads/sec
 # Physical parameters of the hummingbird known to the controller
 g = 9.81
-ell1 = .247
+ell1 = 0.247
 ell2 = -0.039
 ell3x = -0.007
 ell3y = ell3x
@@ -21,7 +21,7 @@ J1x = 0.000189
 J1y = 0.001953
 J1z = 0.001894
 m2 = 0.4717
-J2x = 0.000231
+J2x = 0.00231
 J2y = 0.003274
 J2z = 0.003416
 m3 = 0.1905
