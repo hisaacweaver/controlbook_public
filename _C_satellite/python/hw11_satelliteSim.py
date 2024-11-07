@@ -5,7 +5,7 @@ from signalGenerator import signalGenerator
 from satelliteAnimation import satelliteAnimation
 from dataPlotter import dataPlotter
 from satelliteDynamics import satelliteDynamics
-from ctrlStateFeedback import ctrlStateFeedback
+from ctrlLQR import ctrlStateFeedback
 
 # instantiate satellite, controller, and reference classes
 satellite = satelliteDynamics()

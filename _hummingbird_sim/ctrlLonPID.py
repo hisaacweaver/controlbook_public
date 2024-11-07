@@ -5,8 +5,8 @@ import hummingbirdParam as P
 class ctrlLonPID:
     def __init__(self):
         # tuning parameters
-        tr_pitch = 
-        zeta_pitch = 
+        tr_pitch = 1.0
+        zeta_pitch = 0.707
         self.ki_pitch = 
         # gain calculation
         b_theta = P.ellT/(P.m1 * P.ell1**2 + P.m2 * P.ell2**2 + P.J1y + P.J2y)
