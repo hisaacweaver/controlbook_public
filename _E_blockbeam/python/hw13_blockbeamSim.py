@@ -1,39 +1,50 @@
-
 import matplotlib.pyplot as plt
+import numpy as np
 import blockbeamParam as P
 from signalGenerator import signalGenerator
 from blockbeamAnimation import blockbeamAnimation
 from dataPlotter import dataPlotter
 from blockbeamDynamics import blockbeamDynamics
-from ctrlStateFeedback import ctrlStateFeedback
+from ctrlObserver import ctrlObserver
+from dataPlotterObserver import dataPlotterObserver
 
 # instantiate blockbeam, controller, and reference classes
-blockbeam = blockbeamDynamics()
-controller = ctrlStateFeedback()
-reference = signalGenerator(amplitude=0.5, frequency=0.04)
+blockbeam = blockbeamDynamics(alpha=0.0)
+controller = ctrlObserver()
+reference = signalGenerator(amplitude=30*np.pi/180.0,
+                            frequency=0.05)
+disturbance = signalGenerator(amplitude=0.01)
 
 # instantiate the simulation plots and animation
 dataPlot = dataPlotter()
+dataPlotObserver = dataPlotterObserver()
 animation = blockbeamAnimation()
 
 t = P.t_start  # time starts at t_start
 y = blockbeam.h()  # output of system at start of simulation
 
-while t < P.t_end/5:  # main simulation loop
+while t < P.t_end:  # main simulation loop
+    # Get referenced inputs from signal generators
     # Propagate dynamics in between plot samples
     t_next_plot = t + P.t_plot
 
     # updates control and dynamics at faster simulation rate
     while t < t_next_plot: 
-        r = reference.square(t)  # reference input
-        x = blockbeam.state
-        u = controller.update(P.length/2.0, x)  # update controller
-        y = blockbeam.update(u)  # propagate system
+        r = reference.square(t)
+        d = disturbance.step(t) # start with no d,
+                                # then use this for part e)
+
+        u, xhat = controller.update(r, y)  # update controller
+        y = blockbeam.update(u + d)  # propagate system
         t += P.Ts  # advance time by Ts
+
     # update animation and data plots
     animation.update(blockbeam.state)
     dataPlot.update(t, blockbeam.state, u, r)
-    plt.pause(0.01)  
+    dataPlotObserver.update(t, blockbeam.state, xhat)
+
+    # the pause causes the figure to display during simulation
+    plt.pause(0.0001)  
 
 # Keeps the program from closing until user presses a button.
 print('Press key to close')

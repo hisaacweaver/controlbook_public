@@ -31,6 +31,11 @@ class ctrlStateFeedback:
         else:
             self.K = (cnt.place(A, B, des_poles))
             self.kr = -1.0 / (C @ np.linalg.inv(A - B @ self.K) @ B)
+
+        self.ki = -5.0
+        self.integrator = 0.0
+        self.error_d1 = 0.0
+        
         print('K: ', self.K)
         print('kr: ', self.kr)
         print(des_poles)
@@ -38,8 +43,14 @@ class ctrlStateFeedback:
     def update(self, z_r, x):
         z = x[0][0]
 
+        error = z_r - z
+
+        self.integrator = self.integrator \
+                          + (P.Ts / 2.0) * (error + self.error_d1)
+        self.error_d1 = error
+
         # Compute the state feedback controller
-        f_tilde = -self.K @ x + self.kr * z_r
+        f_tilde = -self.K @ x + - self.ki * self.integrator + self.kr * z_r
 
         # compute total torque
         tau = saturate(f_tilde[0][0], P.F_max)

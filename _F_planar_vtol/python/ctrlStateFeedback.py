@@ -70,24 +70,37 @@ class ctrlStateFeedback:
         print('K_lon: ', self.K_lon)
         print('kr_lon: ', self.kr_lon)
 
+        self.ki_h = -0.1
+        self.ki_z = -0.1
+        self.integrator_h = 0.0
+        self.integrator_z = 0.0
+        self.error_d1_h = 0.0
+        self.error_d1_z = 0.0
     
 
     def update(self, z_r, h_r, x):
         x_lon = np.array([[x[1][0]], [x[4][0]]])
         x_lat = np.array([[x[0][0]], [x[2][0]], [x[3][0]], [x[5][0]]])
 
+        z_error = z_r - x[0][0]
+        h_error = h_r - x[2][0]
+
+        self.integrator_h = self.integrator_h \
+                          + (P.Ts / 2.0) * (h_error + self.error_d1_h)
+        self.error_d1_h = h_error
+
+        self.integrator_z = self.integrator_z \
+                          + (P.Ts / 2.0) * (z_error + self.error_d1_z)
+        self.error_d1_z = z_error
+
         F_eq = P.Fe
         tau_eq = 0.0
-        T_tilde_1 = -self.K_lat @ x_lat 
-        T_tilde = T_tilde_1 + self.kr_lat * h_r
-        F_tilde_1 = -self.K_lon @ x_lon 
-        F_tilde = F_tilde_1 + self.kr_lon * z_r
+        T_tilde = -self.K_lat @ x_lat + self.kr_lat * h_r #+ self.ki_h * self.integrator_h
+        F_tilde = -self.K_lon @ x_lon + self.kr_lon * z_r #+ self.ki_z * self.integrator_z
 
-        F = F_eq + F_tilde
-        tau = tau_eq + T_tilde
-        print(F, tau)
-        u = np.array([[F[0][0]], [tau[0][0]]])
-        print(u)
+        F = F_eq + F_tilde[0][0]
+        tau = tau_eq + T_tilde[0][0]
+        u = np.array([[F], [tau]])
         tau_unsat = P.mixing @ u
         tau = self.saturate(tau_unsat)
 

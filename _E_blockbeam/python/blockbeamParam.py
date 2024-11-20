@@ -13,7 +13,7 @@ width = 0.05  # width of block
 height = width*0.25  # height of block
 
 # Initial Conditions
-z0 = 0 # initial block position,m
+z0 = length/2.0 # initial block position,m
 theta0 = 0*np.pi/180  # initial beam angle,rads
 zdot0 = 0   # initial speed of block along beam, m/s
 thetadot0 = 0 # initial angular speed of the beam,rads/s
@@ -31,5 +31,5 @@ F_max = 1 # Max Force, N
 # sigma =   # cutoff freq for dirty derivative
 
 # equilibrium force when block is in center of beam
-# ze =
-# Fe =
+ze = length/2.0
+Fe = m1*g*(ze/length) + m2*g/2.0

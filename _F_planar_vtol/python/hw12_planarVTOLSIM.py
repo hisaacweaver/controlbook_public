@@ -5,7 +5,7 @@ from signalGenerator import signalGenerator
 from VTOLAnimation import VTOLAnimation
 from dataPlotter import dataPlotter
 from VTOLDynamics import VTOLDynamics
-from ctrlStateFeedback import ctrlStateFeedback
+from ctrlStateFeedbackIntegrator import ctrlStateFeedbackIntegrator as ctrlStateFeedback
 
 # instantiate VTOL, controller, and reference classes
 VTOL = VTOLDynamics()
